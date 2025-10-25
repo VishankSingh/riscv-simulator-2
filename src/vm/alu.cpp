@@ -197,6 +197,29 @@ static std::string decode_fclass(uint16_t res) {
     case AluOp::kXor: {
       return {static_cast<uint64_t>(a ^ b), false};
     }
+    case AluOp::kSIMD_add32: {
+    int64_t result;
+    bool carry = false;
+
+int64_t num_a = static_cast<int64_t>(a);
+int64_t num_b = static_cast<int64_t>(b);
+
+// Extract upper and lower 32 bits
+int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF); // Mask to get lower 32 bits
+int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF); // Mask to get lower 32 bits
+
+// Add the parts
+int32_t sum_upper = upper_a + upper_b;
+int32_t sum_lower = lower_a + lower_b;
+
+// Combine the results
+result = static_cast<int64_t>(sum_lower) + (static_cast<int64_t>(sum_upper) << 32);
+
+return {result, carry};
+
+    }
     case AluOp::kSll: {
       uint64_t result = a << (b & 63);
       return {result, false};

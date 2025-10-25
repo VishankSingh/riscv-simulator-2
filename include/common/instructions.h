@@ -196,7 +196,8 @@ enum Instruction {
   kfcvt_d_l, 
   kfcvt_d_lu, 
   kfmv_d_x,
-
+  //added SIMD_add32 ...
+  kSIMD_add32,
   INVALID,
 
   COUNT // sentinel for length
@@ -227,7 +228,7 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kJtype,      0b1101111, -1, -1, -1, -1, -1), // kJtype
   // InstructionEncoding(Instruction::kUtype,      0b0110111, -1, -1, -1, -1, -1), // kUtype
   InstructionEncoding(Instruction::kLoadType,   0b0000011, -1, -1, -1, -1, -1), // kLoadType
-
+  
   InstructionEncoding(Instruction::kCsrType,  0b1110011, -1, -1, -1, -1, -1), // kCsrType
 
   InstructionEncoding(Instruction::kadd,        0b0110011, -1, 0b000, -1, -1, 0b0000000), // kadd
@@ -257,7 +258,7 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::ksllw,       0b0111011, -1, 0b001, -1, -1, 0b0000000), // ksllw
   InstructionEncoding(Instruction::ksrlw,       0b0111011, -1, 0b101, -1, -1, 0b0000000), // ksrlw
   InstructionEncoding(Instruction::ksraw,       0b0111011, -1, 0b101, -1, -1, 0b0100000), // ksraw
-  
+  InstructionEncoding(Instruction::kSIMD_add32, 0b0110011, -1, 0b000, -1 ,-1, 0b0001001),
   InstructionEncoding(Instruction::kmulw,       0b0111011, -1, 0b000, -1, -1, 0b0000001), // kmulw
   InstructionEncoding(Instruction::kdivw,       0b0111011, -1, 0b100, -1, -1, 0b0000001), // kdivw
   InstructionEncoding(Instruction::kdivuw,      0b0111011, -1, 0b101, -1, -1, 0b0000001), // kdivuw

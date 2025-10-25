@@ -27,7 +27,7 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"sra", Instruction::ksra},
     {"slt", Instruction::kslt},
     {"sltu", Instruction::ksltu},
-
+    {"SIMD_add32",Instruction::kSIMD_add32},
     {"addw", Instruction::kaddw},
     {"subw", Instruction::ksubw},
     {"sllw", Instruction::ksllw},
@@ -188,10 +188,10 @@ static const std::unordered_set<std::string> valid_instructions = {
     "beq", "bne", "blt", "bge", "bltu", "bgeu",
     "lui", "auipc",
     "jal", "jalr",
-    "ecall",
+    "ecall","SIMD_add32",
 
     "csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci",
-
+    
     "la", "nop", "li", "mv", "not", "neg", "negw",
     "sext.w", "seqz", "snez", "sltz", "sgtz",
     "beqz", "bnez", "blez", "bgez", "bltz", "bgtz",
@@ -228,7 +228,7 @@ static const std::unordered_set<std::string> RTypeInstructions = {
     "add", "sub", "and", "or", "xor", "sll", "srl", "sra", "slt", "sltu",
 
     // RV64
-    "addw", "subw", "sllw", "srlw", "sraw",
+    "addw", "subw", "sllw", "srlw", "sraw","SIMD_add32",
 
     // M Extension
     "mul", "mulh", "mulhsu", "mulhu", "div", "divu", "rem", "remu",
@@ -380,6 +380,7 @@ std::unordered_map<std::string, RTypeInstructionEncoding> R_type_instruction_enc
     {"add", {0b0110011, 0b000, 0b0000000}}, // O_GPR_C_GPR_C_GPR
     {"sub", {0b0110011, 0b000, 0b0100000}}, // O_GPR_C_GPR_C_GPR
     {"xor", {0b0110011, 0b100, 0b0000000}}, // O_GPR_C_GPR_C_GPR
+    {"SIMD_add32",{0b0110011, 0b000, 0b0001001}},
     {"or", {0b0110011, 0b110, 0b0000000}}, // O_GPR_C_GPR_C_GPR
     {"and", {0b0110011, 0b111, 0b0000000}}, // O_GPR_C_GPR_C_GPR
     {"sll", {0b0110011, 0b001, 0b0000000}}, // O_GPR_C_GPR_C_GPR
@@ -627,7 +628,7 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"sra", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"slt", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"sltu", {SyntaxType::O_GPR_C_GPR_C_GPR}},
-
+    {"SIMD_add32", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"addi", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"xori", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"ori", {SyntaxType::O_GPR_C_GPR_C_I}},
