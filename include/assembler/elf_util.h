@@ -7,7 +7,7 @@
 #define ELF_UTIL_H
 
 
-#include "vm_asm_mw.h"
+#include "../vm_asm_mw.h"
 
 struct ElfHeader {
   uint8_t e_ident[16] = {0x7F, 'E', 'L', 'F', 1, 1, 1, 0}; // ELF magic number

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/vm/alu.h"
+#include "../include/vm/alu.h"
 
 TEST(ALUTest, AddTest) {
   alu::Alu alu;
@@ -41,4 +41,9 @@ TEST(ALUTest, SraTest) {
   auto result = alu.execute(alu::AluOp::kSra, 0xfffffffffffffffa, 2);
   ASSERT_EQ(result.first, 0xfffffffffffffffe);
   ASSERT_FALSE(result.second);
+}
+
+TEST(SHITTest, shittyTest) {
+  int a = 19;
+  EXPECT_EQ(a, 19);
 }

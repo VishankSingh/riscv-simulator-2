@@ -5,8 +5,8 @@
  */
 
 #include <gtest/gtest.h>
-#include "../src/vm/rvss/rvss_vm.h"
-#include "../src/assembler/assembler.h"
+#include "../include/vm/rvss/rvss_vm.h"
+#include "../include/assembler/assembler.h"
 
 TEST(VmTest, ImmGenTest1) {
   RVSSVM vm;

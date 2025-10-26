@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/assembler/elf_util.h"
+#include "../include/assembler/elf_util.h"
 
 TEST(ElfUtilTest, ElfHeaderTest) {
   ElfHeader elfHeader;

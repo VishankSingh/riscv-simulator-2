@@ -5,7 +5,7 @@
  */
 
 #include <gtest/gtest.h>
-#include "../src/vm/main_memory.h"
+#include "../include/vm/main_memory.h"
 
 TEST(MemoryTest, ReadWriteTest) {
   Memory memory;

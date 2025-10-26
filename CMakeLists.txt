@@ -39,6 +39,7 @@ endif()
 
 
 # tests
+# Do OFF->ON to get test executable
 option(ENABLE_TESTS "Build tests" OFF)
 
 if(ENABLE_TESTS)
@@ -46,6 +47,7 @@ if(ENABLE_TESTS)
     include_directories(${GTEST_INCLUDE_DIRS})
     list(REMOVE_ITEM SRC_FILES "${CMAKE_SOURCE_DIR}/src/main.cpp")
     add_executable(tests ${SRC_FILES} ${TEST_FILES})
+    target_include_directories(tests PRIVATE ${INCLUDE_DIR})
     target_link_libraries(tests GTest::GTest GTest::Main pthread)
     add_custom_target(test_run
         COMMAND ./tests
