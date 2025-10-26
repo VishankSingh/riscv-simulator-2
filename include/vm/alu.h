@@ -48,6 +48,15 @@ enum class AluOp {
     kAnd, ///< Bitwise kAnd operation.
     kOr, ///< Bitwise kOr operation.
     kXor, ///< Bitwise kXor operation.
+    
+    // new SIMD_xxx32
+    kSIMD_add32, 
+    kSIMD_sub32,
+    kSIMD_mul32,
+    kSIMD_load32,
+    kSIMD_div32,
+    kSIMD_rem32,
+    // end of new instructions added
     kSll, ///< Shift left logical operation.
     kSllw, ///< Shift left logical word operation.
     kSrl, ///< Shift right logical operation.
@@ -56,7 +65,7 @@ enum class AluOp {
     kSraw, ///< Shift right arithmetic word operation.
     kSlt, ///< Set less than operation.
     kSltu, ///< Unsigned set less than operation.
-    kSIMD_add32 ,
+
     // Floating point operations
     kFmadd_s, ///< Floating point multiply-add single operation.
     kFmsub_s, ///< Floating point multiply-subtract single operation.
@@ -141,6 +150,17 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::kAnd: os << "kAnd"; break;
         case AluOp::kOr: os << "kOr"; break;
         case AluOp::kXor: os << "kXor"; break;
+        
+        //  newly added SIMD_xxx32
+        case AluOp::kSIMD_add32: os << "kSIMD_add32";break;
+        case AluOp::kSIMD_sub32: os << "kSIMD_sub32";break;
+        case AluOp::kSIMD_mul32: os << "kSIMD_mul32";break;
+        case AluOp::kSIMD_load32: os << "kSIMD_load32";break;
+        case AluOp::kSIMD_div32: os << "kSIMD_div32";break;
+        case AluOp::kSIMD_rem32: os << "kSIMD_rem32";break;
+        
+        // end of new SIMD_xxx32
+        
         case AluOp::kSll: os << "kSll"; break;
         case AluOp::kSrl: os << "kSrl"; break;
         case AluOp::kSra: os << "kSra"; break;
@@ -195,7 +215,6 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::FDIV_D: os << "FDIV_D"; break;
         case AluOp::FSQRT_D: os << "FSQRT_D"; break;
         case AluOp::FSGNJ_D: os << "FSGNJ_D"; break;
-        case AluOp::kSIMD_add32: os << "kSIMD_add32";break;
 
 
         default: os << "UNKNOWN"; break;

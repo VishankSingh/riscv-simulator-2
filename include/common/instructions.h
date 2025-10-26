@@ -196,8 +196,12 @@ enum Instruction {
   kfcvt_d_l, 
   kfcvt_d_lu, 
   kfmv_d_x,
-  //added SIMD_add32 ...
-  kSIMD_add32,
+  kSIMD_add32, 
+  kSIMD_sub32, 
+  kSIMD_mul32, 
+  kSIMD_load32,
+  kSIMD_rem32, 
+  kSIMD_div32,
   INVALID,
 
   COUNT // sentinel for length
@@ -228,7 +232,7 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kJtype,      0b1101111, -1, -1, -1, -1, -1), // kJtype
   // InstructionEncoding(Instruction::kUtype,      0b0110111, -1, -1, -1, -1, -1), // kUtype
   InstructionEncoding(Instruction::kLoadType,   0b0000011, -1, -1, -1, -1, -1), // kLoadType
-  
+
   InstructionEncoding(Instruction::kCsrType,  0b1110011, -1, -1, -1, -1, -1), // kCsrType
 
   InstructionEncoding(Instruction::kadd,        0b0110011, -1, 0b000, -1, -1, 0b0000000), // kadd
@@ -240,8 +244,17 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::ksrl,        0b0110011, -1, 0b101, -1, -1, 0b0000000), // ksrl
   InstructionEncoding(Instruction::ksra,        0b0110011, -1, 0b101, -1, -1, 0b0100000), // ksra
   InstructionEncoding(Instruction::kor,         0b0110011, -1, 0b110, -1, -1, 0b0000000), // kor
-  InstructionEncoding(Instruction::kand,        0b0110011, -1, 0b111, -1, -1, 0b0000000), // kand
-
+  InstructionEncoding(Instruction::kand,        0b0110011, -1, 0b111, -1, -1, 0b0000000), 
+  
+// similarly newly added simple R type instructions 
+  InstructionEncoding(Instruction::kSIMD_add32, 0b0110011, -1, 0b000, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_sub32, 0b0110011, -1, 0b001, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_mul32, 0b0110011, -1, 0b011, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_load32, 0b0110011, -1, 0b111, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_div32, 0b0110011, -1, 0b100, -1 ,-1, 0b0001011),
+  InstructionEncoding(Instruction::kSIMD_rem32, 0b0110011, -1, 0b101, -1 ,-1, 0b0001011), 
+  
+// end of the new istrcutions
 
   InstructionEncoding(Instruction::kmul,        0b0110011, -1, 0b000, -1, -1, 0b0000001), // kmul
   InstructionEncoding(Instruction::kmulh,       0b0110011, -1, 0b001, -1, -1, 0b0000001), // kmulh
@@ -258,7 +271,7 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::ksllw,       0b0111011, -1, 0b001, -1, -1, 0b0000000), // ksllw
   InstructionEncoding(Instruction::ksrlw,       0b0111011, -1, 0b101, -1, -1, 0b0000000), // ksrlw
   InstructionEncoding(Instruction::ksraw,       0b0111011, -1, 0b101, -1, -1, 0b0100000), // ksraw
-  InstructionEncoding(Instruction::kSIMD_add32, 0b0110011, -1, 0b000, -1 ,-1, 0b0001001),
+  
   InstructionEncoding(Instruction::kmulw,       0b0111011, -1, 0b000, -1, -1, 0b0000001), // kmulw
   InstructionEncoding(Instruction::kdivw,       0b0111011, -1, 0b100, -1, -1, 0b0000001), // kdivw
   InstructionEncoding(Instruction::kdivuw,      0b0111011, -1, 0b101, -1, -1, 0b0000001), // kdivuw

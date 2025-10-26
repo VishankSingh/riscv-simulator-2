@@ -148,7 +148,7 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
                 return alu::AluOp::kMul;
                 break;
             }
-            case 0b0001001: {
+            case 0b0001011: {
                 return alu::AluOp::kSIMD_add32;
                 break;
 
@@ -166,6 +166,11 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
             case 0b0000001: {// kMulh
                 return alu::AluOp::kMulh;
                 break;
+            }
+            case 0b0001011: {
+                return alu::AluOp::kSIMD_sub32;
+                break;
+
             }
             }
             break;
@@ -195,6 +200,11 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
                 return alu::AluOp::kMulhu;
                 break;
             }
+            case 0b0001011: {
+                return alu::AluOp::kSIMD_mul32;
+                break;
+
+            }
             }
             break;
         }
@@ -208,6 +218,11 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
             case 0b0000001: {// kDiv
                 return alu::AluOp::kDiv;
                 break;
+            }
+            case 0b0001011: {
+                return alu::AluOp::kSIMD_div32;
+                break;
+
             }
             }
             break;
@@ -226,6 +241,11 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
             case 0b0000001: {// kDivu
                 return alu::AluOp::kDivu;
                 break;
+            }
+            case 0b0001011: {
+                return alu::AluOp::kSIMD_rem32;
+                break;
+
             }
             }
             break;
@@ -254,6 +274,11 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
             case 0b0000001: {// kRemu
                 return alu::AluOp::kRemu;
                 break;
+            }
+            case 0b0001011: {
+                return alu::AluOp::kSIMD_load32;
+                break;
+
             }
             }
             break;

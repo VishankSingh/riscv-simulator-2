@@ -90,6 +90,78 @@ static std::string decode_fclass(uint16_t res) {
 
       return {static_cast<uint64_t>(high_result), false};
     }
+    case AluOp::kSIMD_add32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t sum_upper = upper_a + upper_b;
+      int32_t sum_lower = lower_a + lower_b;
+      uint64_t result = static_cast<uint64_t>(sum_lower) | (static_cast<uint64_t>(sum_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_sub32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t diff_upper = upper_a - upper_b;
+      int32_t diff_lower = lower_a - lower_b;
+      uint64_t result = static_cast<uint64_t>(diff_lower) | (static_cast<uint64_t>(diff_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_mul32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t prod_upper = upper_a * upper_b;
+      int32_t prod_lower = lower_a * lower_b;
+      uint64_t result = static_cast<uint64_t>(prod_lower) | (static_cast<uint64_t>(prod_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_div32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t div_upper = (upper_b != 0) ? upper_a / upper_b : 0; // Avoid division by zero
+      int32_t div_lower = (lower_b != 0) ? lower_a / lower_b : 0; // Avoid division by zero
+      uint64_t result = static_cast<uint64_t>(div_lower) | (static_cast<uint64_t>(div_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_rem32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t rem_upper = (upper_b != 0) ? upper_a % upper_b : 0; // Avoid division by zero
+      int32_t rem_lower = (lower_b != 0) ? lower_a % lower_b : 0; // Avoid division by zero
+      uint64_t result = static_cast<uint64_t>(rem_lower) | (static_cast<uint64_t>(rem_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_load32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int64_t upper = num_a << 32; // Upper 32 bits from a
+      int32_t lower = static_cast<int32_t>(num_b); // Lower 32 bits from b
+      uint64_t result = static_cast<uint64_t>(lower) | static_cast<uint64_t>(upper);
+      return {result, false};
+    }
+    
+    
+    
+    
     case AluOp::kMulhsu: {
       auto sa = static_cast<int64_t>(a);
       auto sb = static_cast<uint64_t>(b);
@@ -197,29 +269,7 @@ static std::string decode_fclass(uint16_t res) {
     case AluOp::kXor: {
       return {static_cast<uint64_t>(a ^ b), false};
     }
-    case AluOp::kSIMD_add32: {
-    int64_t result;
-    bool carry = false;
-
-int64_t num_a = static_cast<int64_t>(a);
-int64_t num_b = static_cast<int64_t>(b);
-
-// Extract upper and lower 32 bits
-int32_t upper_a = static_cast<int32_t>(num_a >> 32);
-int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF); // Mask to get lower 32 bits
-int32_t upper_b = static_cast<int32_t>(num_b >> 32);
-int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF); // Mask to get lower 32 bits
-
-// Add the parts
-int32_t sum_upper = upper_a + upper_b;
-int32_t sum_lower = lower_a + lower_b;
-
-// Combine the results
-result = static_cast<int64_t>(sum_lower) + (static_cast<int64_t>(sum_upper) << 32);
-
-return {result, carry};
-
-    }
+    
     case AluOp::kSll: {
       uint64_t result = a << (b & 63);
       return {result, false};
