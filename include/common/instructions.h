@@ -202,6 +202,10 @@ enum Instruction {
   kSIMD_load32,
   kSIMD_rem32, 
   kSIMD_div32,
+  // adding SIMD_xxx16
+  kSIMD_add16,
+  kSIMD_sub16,
+  //end of SIMD_xxx16
   // klbf16,
   // ksbf16,
   kfadd_bf16,
@@ -257,8 +261,11 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kSIMD_sub32, 0b0110011, -1, 0b001, -1 ,-1, 0b0001011), 
   InstructionEncoding(Instruction::kSIMD_mul32, 0b0110011, -1, 0b011, -1 ,-1, 0b0001011), 
   InstructionEncoding(Instruction::kSIMD_load32, 0b0110011, -1, 0b111, -1 ,-1, 0b0001011), 
+  
   InstructionEncoding(Instruction::kSIMD_div32, 0b0110011, -1, 0b100, -1 ,-1, 0b0001011),
   InstructionEncoding(Instruction::kSIMD_rem32, 0b0110011, -1, 0b101, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_add16, 0b0110011, -1, 0b010, -1 ,-1, 0b0001011),
+  InstructionEncoding(Instruction::kSIMD_sub16, 0b0110011, -1, 0b110, -1 ,-1, 0b0001011),
 // end of the new istrcutions
 
   InstructionEncoding(Instruction::kmul,        0b0110011, -1, 0b000, -1, -1, 0b0000001), // kmul

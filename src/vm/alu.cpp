@@ -116,6 +116,54 @@ static std::string decode_fclass(uint16_t res) {
       uint64_t result = static_cast<uint64_t>(diff_lower) | (static_cast<uint64_t>(diff_upper) << 32);
       return {result, false};
     }
+    case AluOp::kSIMD_add16: {
+        int64_t num_a = static_cast<int64_t>(a);
+        int64_t num_b = static_cast<int64_t>(b);
+        // Extract four 16-bit parts from each 64-bit input
+        int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);         // Lowest 16 bits
+        int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+        int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+        int16_t a3 = static_cast<int16_t>(num_a >> 48);            // Highest 16 bits
+        int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+        int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+        int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+        int16_t b3 = static_cast<int16_t>(num_b >> 48);
+        // Perform 16-bit additions
+        int16_t sum0 = a0 + b0;
+        int16_t sum1 = a1 + b1;
+        int16_t sum2 = a2 + b2;
+        int16_t sum3 = a3 + b3;
+        // Combine results into a 64-bit value
+        uint64_t result = (static_cast<uint64_t>(sum0) & 0xFFFF) |
+                          ((static_cast<uint64_t>(sum1) & 0xFFFF) << 16) |
+                          ((static_cast<uint64_t>(sum2) & 0xFFFF) << 32) |
+                          (static_cast<uint64_t>(sum3) << 48);
+        return {result, false};
+    }
+    case AluOp::kSIMD_sub16: {
+        int64_t num_a = static_cast<int64_t>(a);
+        int64_t num_b = static_cast<int64_t>(b);
+        // Extract four 16-bit parts from each 64-bit input
+        int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);         // Lowest 16 bits
+        int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+        int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+        int16_t a3 = static_cast<int16_t>(num_a >> 48);            // Highest 16 bits
+        int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+        int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+        int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+        int16_t b3 = static_cast<int16_t>(num_b >> 48);
+        // Perform 16-bit subtractions
+        int16_t diff0 = a0 - b0;
+        int16_t diff1 = a1 - b1;
+        int16_t diff2 = a2 - b2;
+        int16_t diff3 = a3 - b3;
+        // Combine results into a 64-bit value
+        uint64_t result = (static_cast<uint64_t>(diff0) & 0xFFFF) |
+                          ((static_cast<uint64_t>(diff1) & 0xFFFF) << 16) |
+                          ((static_cast<uint64_t>(diff2) & 0xFFFF) << 32) |
+                          (static_cast<uint64_t>(diff3) << 48);
+        return {result, false};
+    }
     case AluOp::kSIMD_mul32: {
       int64_t num_a = static_cast<int64_t>(a);
       int64_t num_b = static_cast<int64_t>(b);
