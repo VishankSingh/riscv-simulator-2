@@ -703,6 +703,7 @@ bool isValidFDITypeInstruction(const std::string &instruction);
 bool isValidFDSTypeInstruction(const std::string &instruction);
 
 bool isFInstruction(const uint32_t &instruction);
+bool isBFloat16Instruction(const uint32_t &instruction);
 bool isDInstruction(const uint32_t &instruction);
 
 std::string getExpectedSyntaxes(const std::string &opcode);

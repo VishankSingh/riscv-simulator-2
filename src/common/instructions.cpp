@@ -972,6 +972,29 @@ bool isFInstruction(const uint32_t &instruction) {
   return false;
 }
 
+bool isBFloat16Instruction(const uint32_t &instruction) {
+  uint8_t opcode = (instruction & 0b1111111);
+  uint8_t funct7 = (instruction >> 25) & 0b1111111;
+
+  switch (opcode) {
+    case 0b1010011: { 
+      switch (funct7) {
+        case 0b0000010: // kfadd_bf16
+        case 0b0000110: // kfsub_bf16
+        case 0b0001010: // kfmul_bf16
+        case 0b0001110: // kfdiv_bf16
+          return true; 
+        default:
+          return false; 
+      }
+    }
+    default:
+      break;
+  }
+
+  return false;
+}
+
 bool isDInstruction(const uint32_t &instruction) {
   uint8_t opcode = (instruction & 0b1111111);
   uint8_t funct3 = (instruction >> 12) & 0b111;
