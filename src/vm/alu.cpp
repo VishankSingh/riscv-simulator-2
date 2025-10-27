@@ -5,12 +5,14 @@
  */
 
 #include "vm/alu.h"
+#include "fp_utils/bfloat16.h"
 #include <cfenv>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <limits>
 
 namespace alu {
 
@@ -897,6 +899,80 @@ static std::string decode_fclass(uint16_t res) {
   uint64_t result_bits = 0;
   std::memcpy(&result_bits, &result, sizeof(result));
   return {result_bits, fcsr};
+}
+
+[[nodiscard]] std::pair<uint64_t, uint8_t> Alu::bf16execute(AluOp op,
+                                                            uint64_t ina,
+                                                            uint64_t inb,
+                                                            uint64_t inc,
+                                                            uint8_t rm){
+  
+  using namespace std;
+  
+  uint64_t result_accumulator = 0;
+  uint8_t fcsr = 0;
+
+
+  int original_rm = fegetround();
+  switch(rm){
+    case 0b000: fesetround(FE_TONEAREST); break;
+    case 0b001: fesetround(FE_TOWARDZERO); break;
+    case 0b010: fesetround(FE_DOWNWARD); break;
+    case 0b011: fesetround(FE_UPWARD); break;
+    default: break;
+  }
+
+  feclearexcept(FE_ALL_EXCEPT);
+
+  for(int i=0; i<4; i++){
+
+    uint16_t a_bits = static_cast<uint16_t>((ina >> (i*16)) & 0xFFFF);
+    uint16_t b_bits = static_cast<uint16_t>((inb >> (i*16)) & 0xFFFF);
+
+    float a = bfloat16_to_float(a_bits);
+    float b = bfloat16_to_float(b_bits);
+    float result_f = 0.0f;
+
+    switch(op){
+      case AluOp::FADD_BF16:
+        result_f = a+b;
+        break;
+      case AluOp::FSUB_BF16:
+        result_f = a-b;
+        break;
+      case AluOp::FMUL_BF16:
+        result_f = a*b;
+      case AluOp::FDIV_BF16:
+        if(b==0.0f){
+          result_f = numeric_limits<float>::quiet_NaN();
+        }
+        else{
+          result_f= a/b;
+        }
+        break;
+      default:
+        result_f = numeric_limits<float>::quiet_NaN();
+        break;
+    }
+
+    uint16_t result_bits = float_to_bfloat16(result_f);
+
+    result_accumulator |= (static_cast<uint64_t>(result_bits) << (i*16));
+
+  }
+
+
+  int raised = fetestexcept(FE_ALL_EXCEPT);
+  if (raised & FE_INVALID) fcsr |= FCSR_INVALID_OP;
+  if (raised & FE_DIVBYZERO) fcsr |= FCSR_DIV_BY_ZERO;
+  if (raised & FE_OVERFLOW) fcsr |= FCSR_OVERFLOW;
+  if (raised & FE_UNDERFLOW) fcsr |= FCSR_UNDERFLOW;
+  if (raised & FE_INEXACT) fcsr |= FCSR_INEXACT;
+    
+
+  fesetround(original_rm);
+
+  return {result_accumulator, fcsr};
 }
 
 void Alu::setFlags(bool carry, bool zero, bool negative, bool overflow) {

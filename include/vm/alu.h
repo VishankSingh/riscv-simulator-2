@@ -135,6 +135,11 @@ enum class AluOp {
 
     FMV_D_X, ///< Floating point move to integer double operation.
     FMV_X_D, ///< Floating point move from integer double operation.
+
+    FADD_BF16, ///< Floating point addition Bfloat16
+    FSUB_BF16, ///< Floating point subtraction Bfloat16
+    FMUL_BF16, ///< Floating point multiplication Bfloat16
+    FDIV_BF16, ///< Floating point division Bfloat16
 };
 
 inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
@@ -158,7 +163,6 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::kSIMD_load32: os << "kSIMD_load32";break;
         case AluOp::kSIMD_div32: os << "kSIMD_div32";break;
         case AluOp::kSIMD_rem32: os << "kSIMD_rem32";break;
-        
         // end of new SIMD_xxx32
         
         case AluOp::kSll: os << "kSll"; break;
@@ -216,6 +220,13 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::FSQRT_D: os << "FSQRT_D"; break;
         case AluOp::FSGNJ_D: os << "FSGNJ_D"; break;
 
+        // newly added Bfloat16 instructions
+        case AluOp::FADD_BF16: os << "FADD_BF16";break;
+        case AluOp::FSUB_BF16: os << "FSUB_BF16";break;
+        case AluOp::FDIV_BF16: os << "FDIV_BF16";break;
+        case AluOp::FMUL_BF16: os << "FMUL_BF16";break;
+        
+        // end of new Bfloat16 instructions
 
         default: os << "UNKNOWN"; break;
     }
@@ -249,6 +260,8 @@ public:
     [[nodiscard]] static std::pair<uint64_t, uint8_t> fpexecute(AluOp op, uint64_t ina, uint64_t inb, uint64_t inc, uint8_t rm) ;
 
     [[nodiscard]] static std::pair<uint64_t, bool> dfpexecute(AluOp op, uint64_t ina, uint64_t inb, uint64_t inc, uint8_t rm) ;
+
+    [[nodiscard]] static std::pair<uint64_t, uint8_t> bf16execute(AluOp op, uint64_t ina, uint64_t inb, uint64_t inc, uint8_t rm);
 
     void setFlags(bool carry, bool zero, bool negative, bool overflow);
 

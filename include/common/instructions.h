@@ -202,6 +202,12 @@ enum Instruction {
   kSIMD_load32,
   kSIMD_rem32, 
   kSIMD_div32,
+  // klbf16,
+  // ksbf16,
+  kfadd_bf16,
+  kfsub_bf16,
+  kfmul_bf16,
+  kfdiv_bf16,
   INVALID,
 
   COUNT // sentinel for length
@@ -253,7 +259,6 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kSIMD_load32, 0b0110011, -1, 0b111, -1 ,-1, 0b0001011), 
   InstructionEncoding(Instruction::kSIMD_div32, 0b0110011, -1, 0b100, -1 ,-1, 0b0001011),
   InstructionEncoding(Instruction::kSIMD_rem32, 0b0110011, -1, 0b101, -1 ,-1, 0b0001011), 
-  
 // end of the new istrcutions
 
   InstructionEncoding(Instruction::kmul,        0b0110011, -1, 0b000, -1, -1, 0b0000001), // kmul
@@ -370,6 +375,16 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kfsub_d,     0b1010011, -1, -1, -1, -1, 0b0000101), // kfsub_d
   InstructionEncoding(Instruction::kfmul_d,     0b1010011, -1, -1, -1, -1, 0b0001001), // kfmul_d
   InstructionEncoding(Instruction::kfdiv_d,     0b1010011, -1, -1, -1, -1, 0b0001101), // kfdiv_d
+
+  // newly added simple R type instructions for Bfloat16 
+
+  InstructionEncoding(Instruction::kfadd_bf16, 0b1010011, -1, -1, -1, -1, 0b0000010), // kfadd_bf16
+  InstructionEncoding(Instruction::kfsub_bf16, 0b1010011, -1, -1, -1, -1, 0b0000110), // kfsub_bf16
+  InstructionEncoding(Instruction::kfmul_bf16, 0b1010011, -1, -1, -1, -1, 0b0001010), // kfmul_bf16
+  InstructionEncoding(Instruction::kfdiv_bf16, 0b1010011, -1, -1, -1, -1, 0b0001110), // kfdiv_bf16
+
+
+  // end of the new istrcutions
   
 
   InstructionEncoding(Instruction::kfsqrt_s,    0b1010011, -1, -1, 0b00000, -1, 0b0101100), // kfsqrt_s

@@ -522,11 +522,17 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
             case 0b0000001: {// FADD_D
                 return alu::AluOp::FADD_D;
             }
+            case 0b0000010: {// FADD_BF16
+                return alu::AluOp::FADD_BF16;
+            }
             case 0b0000100: {// FSUB_S
                 return alu::AluOp::FSUB_S;
             }
             case 0b0000101: {// FSUB_D
                 return alu::AluOp::FSUB_D;
+            }
+            case 0b0000110: {// FSUB_BF16
+                return alu::AluOp::FSUB_BF16;
             }
             case 0b0001000: {// FMUL_S
                 return alu::AluOp::FMUL_S;
@@ -534,11 +540,17 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
             case 0b0001001: {// FMUL_D
                 return alu::AluOp::FMUL_D;
             }
+            case 0b0001010: {// FMUL_BF16
+                return alu::AluOp::FMUL_BF16;
+            }
             case 0b0001100: {// FDIV_S
                 return alu::AluOp::FDIV_S;
             }
             case 0b0001101: {// FDIV_D
                 return alu::AluOp::FDIV_D;
+            }
+            case 0b0001110: {// FDIV_BF16
+                return alu::AluOp::FDIV_BF16;
             }
             case 0b0101100: {// FSQRT_S
                 return alu::AluOp::FSQRT_S;
