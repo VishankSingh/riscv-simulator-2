@@ -972,53 +972,91 @@ static std::string decode_fclass(uint16_t res) {
 
   feclearexcept(FE_ALL_EXCEPT);
 
-  const float BF16_MAX = 3.38953139e38f;
-  const float BF16_MIN = -BF16_MAX;
+  switch(op){
 
-  for(int i=0; i<4; i++){
+    case AluOp::FADD_BF16:
+    case AluOp::FSUB_BF16:
+    case AluOp::FMUL_BF16:
+    case AluOp::FDIV_BF16:{
 
-    uint16_t a_bits = static_cast<uint16_t>((ina >> (i*16)) & 0xFFFF);
-    uint16_t b_bits = static_cast<uint16_t>((inb >> (i*16)) & 0xFFFF);
+      const float BF16_MAX = 3.38953139e38f;
+      const float BF16_MIN = -BF16_MAX;
 
-    float a = bfloat16_to_float(a_bits);
-    float b = bfloat16_to_float(b_bits);
-    float result_f = 0.0f;
+      for(int i=0; i<4; i++){
 
-    switch(op){
-      case AluOp::FADD_BF16:
-        result_f = a+b;
-        break;
-      case AluOp::FSUB_BF16:
-        result_f = a-b;
-        break;
-      case AluOp::FMUL_BF16:
-        result_f = a*b;
-      case AluOp::FDIV_BF16:
-        if(b==0.0f){
-          result_f = numeric_limits<float>::quiet_NaN();
+        uint16_t a_bits = static_cast<uint16_t>((ina >> (i*16)) & 0xFFFF);
+        uint16_t b_bits = static_cast<uint16_t>((inb >> (i*16)) & 0xFFFF);
+
+        float a = bfloat16_to_float(a_bits);
+        float b = bfloat16_to_float(b_bits);
+        float result_f = 0.0f;
+
+        switch(op){
+          case AluOp::FADD_BF16:
+            result_f = a+b;
+            break;
+          case AluOp::FSUB_BF16:
+            result_f = a-b;
+            break;
+          case AluOp::FMUL_BF16:
+            result_f = a*b;
+            break;
+          case AluOp::FDIV_BF16:
+            if(b==0.0f){
+              result_f = numeric_limits<float>::quiet_NaN();
+            }
+            else{
+              result_f = a/b;
+            }
+            break;
+          default:
+            result_f = numeric_limits<float>::quiet_NaN();
+            break;
         }
-        else{
-          result_f= a/b;
+
+        if(!isnan(result_f)){
+          if(result_f>BF16_MAX){
+            result_f = BF16_MAX;
+          }
+          else if(result_f<BF16_MIN){
+            result_f = BF16_MIN;
+          }
         }
-        break;
-      default:
-        result_f = numeric_limits<float>::quiet_NaN();
-        break;
-    }
 
-    if(!isnan(result_f)){
-      if(result_f>BF16_MAX){
-        result_f = BF16_MAX;
+        uint16_t result_bits = float_to_bfloat16(result_f);
+
+        result_accumulator |= (static_cast<uint64_t>(result_bits) << (i*16));
+
       }
-      else if(result_f<BF16_MIN){
-        result_f = BF16_MIN;
-      }
+      break;
     }
+    case AluOp::VDOTP_BF16:{
+      float a[4],b[4];
+      for(int i=0;i<4;i++){
+        a[i]=bfloat16_to_float(static_cast<uint16_t>((ina>>(i*16))&0xFFFF));
+        b[i]=bfloat16_to_float(static_cast<uint16_t>((inb>>(i*16))&0xFFFF));
+      }
 
-    uint16_t result_bits = float_to_bfloat16(result_f);
+      uint32_t acc_bits = static_cast<uint32_t>(inc&0xFFFFFFFF);
+      float acc_in;
+      memcpy(&acc_in, &acc_bits, sizeof(float));
+      float prod0 = a[0]*b[0];
+      float prod1 = a[1]*b[1];
+      float prod2 = a[2]*b[2];
+      float prod3 = a[3]*b[3];
 
-    result_accumulator |= (static_cast<uint64_t>(result_bits) << (i*16));
+      float sum = prod0+prod1+prod2+prod3;
 
+      float result_f = acc_in + sum;
+
+      uint32_t result_bits;
+      memcpy(&result_bits, &result_f, sizeof(float));
+      result_accumulator = static_cast<uint64_t>(result_bits);
+
+      break;
+    }
+    default:
+      break;
   }
 
 

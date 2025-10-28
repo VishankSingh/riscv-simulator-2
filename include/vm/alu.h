@@ -144,6 +144,7 @@ enum class AluOp {
     FSUB_BF16, ///< Floating point subtraction Bfloat16
     FMUL_BF16, ///< Floating point multiplication Bfloat16
     FDIV_BF16, ///< Floating point division Bfloat16
+    VDOTP_BF16, ///< Vector Bfloat16 dot product
 
     // end of BFloat16 instructions
 
@@ -243,6 +244,7 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::FSUB_BF16: os << "FSUB_BF16";break;
         case AluOp::FDIV_BF16: os << "FDIV_BF16";break;
         case AluOp::FMUL_BF16: os << "FMUL_BF16";break;
+        case AluOp::VDOTP_BF16: os << "VDOTP_BF16";break;
         
         // end of new Bfloat16 instructions
 

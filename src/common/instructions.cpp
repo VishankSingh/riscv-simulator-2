@@ -146,6 +146,7 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"fsub_bf16",Instruction::kfsub_bf16},
     {"fmul_bf16",Instruction::kfmul_bf16},
     {"fdiv_bf16",Instruction::kfdiv_bf16},
+    {"vdotp_bf16",Instruction::kvdotp_bf16},
 
     // end of BFloat16 instructions
 
@@ -214,7 +215,7 @@ static const std::unordered_set<std::string> valid_instructions = {
     "lui", "auipc",
     "jal", "jalr",
     "ecall","SIMD_add32","SIMD_sub32","SIMD_mul32","SIMD_load32","SIMD_div32","SIMD_rem32",
-    "fadd_bf16","fsub_bf16","fmul_bf16","fdiv_bf16","SIMD_add16","SIMD_sub16",
+    "fadd_bf16","fsub_bf16","fmul_bf16","fdiv_bf16","vdotp_bf16","SIMD_add16","SIMD_sub16",
     "SIMDF_add32","SIMDF_sub32","SIMDF_mul32","SIMDF_div32","SIMDF_rem32","SIMDF_ld32", // newly added instructions 
 
     "csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci",
@@ -353,7 +354,7 @@ static const std::unordered_set<std::string> FDExtensionRTypeInstructions = {
 static const std::unordered_set<std::string> FDExtensionR1TypeInstructions = {
     "fadd.s", "fsub.s", "fmul.s", "fdiv.s",
     "fadd.d", "fsub.d", "fmul.d", "fdiv.d",
-    "fadd_bf16", "fsub_bf16", "fdiv_bf16", "fmul_bf16", // new Bfloat16 Instructions
+    "fadd_bf16", "fsub_bf16", "fdiv_bf16", "fmul_bf16","vdotp_bf16", // new Bfloat16 Instructions
     "SIMDF_add32","SIMDF_sub32","SIMDF_mul32","SIMDF_div32","SIMDF_rem32","SIMDF_ld32", // new SIMDF_xxx32 instructions
 
 };
@@ -563,6 +564,7 @@ std::unordered_map<std::string, FDR1TypeInstructionEncoding> F_D_R1_type_instruc
     {"fsub_bf16", {0b1010011, 0b0000110}}, // O_FPR_C_FPR_C_FPR
     {"fmul_bf16", {0b1010011, 0b0001010}}, // O_FPR_C_FPR_C_FPR
     {"fdiv_bf16", {0b1010011, 0b0001110}}, // O_FPR_C_FPR_C_FPR
+    {"vdotp_bf16", {0b1010011, 0b0010010}}, // O_FPR_C_FPR_C_FPR
 
     // SIMDF_xxx32
     {"SIMDF_add32",{0b1010011, 0b0000011}}, // O_FPR_C_FPR_C_FPR
@@ -806,6 +808,7 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"fsub_bf16", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
     {"fmul_bf16", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
     {"fdiv_bf16", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
+    {"vdotp_bf16", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
 
     {"SIMDF_add32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
     {"SIMDF_sub32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
@@ -1022,6 +1025,7 @@ bool isBFloat16Instruction(const uint32_t &instruction) {
         case 0b0000110: // kfsub_bf16
         case 0b0001010: // kfmul_bf16
         case 0b0001110: // kfdiv_bf16
+        case 0b0010010: // kvdotp_bf16
           return true; 
         default:
           return false; 

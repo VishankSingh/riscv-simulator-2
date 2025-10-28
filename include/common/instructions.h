@@ -213,6 +213,7 @@ enum Instruction {
   kfsub_bf16,
   kfmul_bf16,
   kfdiv_bf16,
+  kvdotp_bf16,
   // end of Bfloat16 instructions
   // adding SIMDF_xxx32 instructions
   kSIMDF_add32,
@@ -399,6 +400,7 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kfsub_bf16, 0b1010011, -1, -1, -1, -1, 0b0000110), // kfsub_bf16
   InstructionEncoding(Instruction::kfmul_bf16, 0b1010011, -1, -1, -1, -1, 0b0001010), // kfmul_bf16
   InstructionEncoding(Instruction::kfdiv_bf16, 0b1010011, -1, -1, -1, -1, 0b0001110), // kfdiv_bf16
+  InstructionEncoding(Instruction::kvdotp_bf16, 0b1010011, -1, -1, -1, -1, 0b0010010), // kvdotp_bf16
 
 
   // end of the new istrcutions

@@ -572,6 +572,9 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
             case 0b0001111: {// SIMDF_DIV32
                 return alu::AluOp::SIMDF_DIV32;
             }
+            case 0b0010010: {// VDOTP_BF16
+                return alu::AluOp::VDOTP_BF16;
+            }
             case 0b0010011: {// SIMDF_REM32
                 return alu::AluOp::SIMDF_REM32;
             }
