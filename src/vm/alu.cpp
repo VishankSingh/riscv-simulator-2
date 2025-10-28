@@ -972,6 +972,9 @@ static std::string decode_fclass(uint16_t res) {
 
   feclearexcept(FE_ALL_EXCEPT);
 
+  const float BF16_MAX = 3.38953139e38f;
+  const float BF16_MIN = -BF16_MAX;
+
   for(int i=0; i<4; i++){
 
     uint16_t a_bits = static_cast<uint16_t>((ina >> (i*16)) & 0xFFFF);
@@ -1003,6 +1006,15 @@ static std::string decode_fclass(uint16_t res) {
         break;
     }
 
+    if(!isnan(result_f)){
+      if(result_f>BF16_MAX){
+        result_f = BF16_MAX;
+      }
+      else if(result_f<BF16_MIN){
+        result_f = BF16_MIN;
+      }
+    }
+
     uint16_t result_bits = float_to_bfloat16(result_f);
 
     result_accumulator |= (static_cast<uint64_t>(result_bits) << (i*16));
@@ -1022,6 +1034,157 @@ static std::string decode_fclass(uint16_t res) {
 
   return {result_accumulator, fcsr};
 }
+
+[[nodiscard]] std::pair<uint64_t, uint8_t> Alu::simdf32execute(AluOp op,
+                                                               uint64_t ina,
+                                                               uint64_t inb,
+                                                               uint64_t inc,
+                                                               uint8_t rm){
+
+  using namespace std;
+
+  uint32_t ina_lo_bits = static_cast<uint32_t>(ina & 0xFFFFFFFF);
+  uint32_t ina_hi_bits = static_cast<uint32_t>(ina >> 32);
+  uint32_t inb_lo_bits = static_cast<uint32_t>(inb & 0xFFFFFFFF);
+  uint32_t inb_hi_bits = static_cast<uint32_t>(inb >> 32);
+
+  float a_lo,a_hi,b_lo,b_hi;
+  memcpy(&a_lo, &ina_lo_bits, sizeof(float));
+  memcpy(&a_hi, &ina_hi_bits, sizeof(float));
+  memcpy(&b_lo, &inb_lo_bits, sizeof(float));
+  memcpy(&b_hi, &inb_hi_bits, sizeof(float));
+
+  float result_lo = 0.0f;
+  float result_hi = 0.0f;
+  uint64_t result_accumulator = 0;
+
+  uint8_t fcsr = 0;
+  int original_rm = fegetround();
+  switch(rm){
+    case 0b000: fesetround(FE_TONEAREST); break;
+    case 0b001: fesetround(FE_TOWARDZERO); break;
+    case 0b010: fesetround(FE_DOWNWARD); break;
+    case 0b011: fesetround(FE_UPWARD); break;
+    default: break;
+  }
+  feclearexcept(FE_ALL_EXCEPT);
+
+  const float F32_MAX = std::numeric_limits<float>::max();
+  const float F32_MIN = -F32_MAX;
+
+  switch(op){
+    case AluOp::SIMDF_ADD32:{
+      result_lo = a_lo + b_lo;
+      result_hi = a_hi + b_hi;
+      break;
+    }
+    case AluOp::SIMDF_SUB32:{
+      result_lo = a_lo - b_lo;
+      result_hi = a_hi - b_hi;
+      break;
+    }
+    case AluOp::SIMDF_MUL32:{
+      result_lo = a_lo * b_lo;
+      result_hi = a_hi * b_hi;
+      break;
+    }
+    case AluOp::SIMDF_DIV32:{
+      
+      if(b_lo==0.0f){
+        result_lo = numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_DIV_BY_ZERO;
+      }
+      else{
+        result_lo = a_lo/b_lo;
+      }
+      if(b_hi==0.0f){
+        result_hi = std::numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_DIV_BY_ZERO;
+      }
+      else{
+        result_hi = a_hi/b_hi;
+      }
+      break;
+    }
+    case AluOp::SIMDF_REM32:{
+      if(b_lo==0.0f){
+        result_lo = std::numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_INVALID_OP;
+      }
+      else{
+        result_lo = std::fmod(a_lo, b_lo);
+      }
+      if(b_hi==0.0f){
+        result_hi = std::numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_INVALID_OP;
+      }
+      else{
+        result_hi = fmod(a_hi,b_hi);
+      }
+      break;
+
+    }
+    case AluOp::SIMDF_LD32:{
+      uint32_t lo_from_rs1 = static_cast<uint32_t>(ina & 0xFFFFFFFF);
+      uint32_t lo_from_rs2 = static_cast<uint32_t>(inb & 0xFFFFFFFF);
+      result_accumulator = (static_cast<uint64_t>(lo_from_rs1) << 32) | lo_from_rs2;
+      
+      fesetround(original_rm);
+      return {result_accumulator, fcsr};
+    }
+    default:
+    break;
+  }
+
+  bool lo_was_inf = std::isinf(result_lo);
+  bool hi_was_inf = std::isinf(result_hi);
+
+  auto clamp_lane = [&](float &v){
+    if(isnan(v)){
+      return;
+    }
+    if(isinf(v)){
+      v = signbit(v) ? F32_MIN : F32_MAX;
+      return;
+    }
+
+    if(v>F32_MAX){
+      v = F32_MAX;
+    }
+    else if(v<F32_MIN){
+      v = F32_MIN;
+
+    }
+  };
+
+  clamp_lane(result_lo);
+  clamp_lane(result_hi);
+
+  int raised = fetestexcept(FE_ALL_EXCEPT);
+  if (raised & FE_INVALID) fcsr |= FCSR_INVALID_OP;
+  if (raised & FE_DIVBYZERO) fcsr |= FCSR_DIV_BY_ZERO;
+  if (raised & FE_OVERFLOW) fcsr |= FCSR_OVERFLOW;
+  if (raised & FE_UNDERFLOW) fcsr |= FCSR_UNDERFLOW;
+  if (raised & FE_INEXACT) fcsr |= FCSR_INEXACT;
+
+  if(lo_was_inf||hi_was_inf){
+    fcsr|= FCSR_OVERFLOW;
+  }
+
+  fesetround(original_rm);
+
+  uint32_t result_lo_bits;
+  uint32_t result_hi_bits;
+
+  memcpy(&result_lo_bits,&result_lo,sizeof(float));
+  memcpy(&result_hi_bits,&result_hi,sizeof(float));
+
+
+  result_accumulator = (static_cast<uint64_t>(result_hi_bits) <<32)|result_lo_bits;
+
+
+  return {result_accumulator,fcsr};                                                               
+                                                               }
 
 void Alu::setFlags(bool carry, bool zero, bool negative, bool overflow) {
   carry_ = carry;

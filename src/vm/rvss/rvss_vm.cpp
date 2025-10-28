@@ -57,6 +57,10 @@ void RVSSVM::Execute() {
     ExecuteBFloat16();
     return;
   }
+  else if(instruction_set::isSIMDF32Instruction(current_instruction_)){
+    ExecuteSIMDF32();
+    return;
+  }
   else if (instruction_set::isFInstruction(current_instruction_)) { // RV64 F
     ExecuteFloat();
     return;
@@ -186,6 +190,46 @@ void RVSSVM::ExecuteBFloat16() {
 
 
   registers_.WriteCsr(0x003, fcsr_status);
+}
+
+void RVSSVM::ExecuteSIMDF32(){
+  uint8_t opcode = current_instruction_ & 0b1111111;
+  uint8_t funct3 = (current_instruction_ >> 12) & 0b111;
+  uint8_t funct7 = (current_instruction_ >> 25) & 0b1111111;
+  uint8_t rm = funct3;
+  uint8_t rs1 = (current_instruction_ >> 15) & 0b11111;
+  uint8_t rs2 = (current_instruction_ >> 20) & 0b11111;
+  uint8_t rs3 = (current_instruction_ >> 27) & 0b11111; 
+
+  uint8_t fcsr_status = 0;
+
+  int32_t imm = ImmGenerator(current_instruction_);
+
+  if (rm == 0b111) {
+    rm = registers_.ReadCsr(0x002);
+  }
+
+
+  uint64_t reg1_value = registers_.ReadFpr(rs1);
+  uint64_t reg2_value = registers_.ReadFpr(rs2);
+  uint64_t reg3_value = registers_.ReadFpr(rs3); 
+
+  
+  if (funct7==0b1101000 || funct7==0b1111000 || opcode==0b0000111 || opcode==0b0100111) {
+    reg1_value = registers_.ReadGpr(rs1);
+  }
+
+
+  if (control_unit_.GetAluSrc()) {
+    reg2_value = static_cast<uint64_t>(static_cast<int64_t>(imm));
+  }
+
+  alu::AluOp aluOperation = control_unit_.GetAluSignal(current_instruction_, control_unit_.GetAluOp());
+  std::tie(execution_result_, fcsr_status) = alu::Alu::simdf32execute(aluOperation, reg1_value, reg2_value, reg3_value, rm);
+
+
+  registers_.WriteCsr(0x003, fcsr_status);
+
 }
 
 

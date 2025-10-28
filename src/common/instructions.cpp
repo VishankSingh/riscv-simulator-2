@@ -33,10 +33,6 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"SIMD_load32",Instruction::kSIMD_load32},
     {"SIMD_div32",Instruction::kSIMD_div32},
     {"SIMD_rem32",Instruction::kSIMD_rem32},
-    {"fadd_bf16",Instruction::kfadd_bf16},
-    {"fsub_bf16",Instruction::kfsub_bf16},
-    {"fmul_bf16",Instruction::kfmul_bf16},
-    {"fdiv_bf16",Instruction::kfdiv_bf16},
     {"SIMD_add16",Instruction::kSIMD_add16},
     {"SIMD_sub16",Instruction::kSIMD_sub16},
     // end new instructions
@@ -145,6 +141,23 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"fdiv.d", Instruction::kfdiv_d},
     {"fsqrt.d", Instruction::kfsqrt_d},
 
+    // newly added Bfloat16 instructions
+    {"fadd_bf16",Instruction::kfadd_bf16},
+    {"fsub_bf16",Instruction::kfsub_bf16},
+    {"fmul_bf16",Instruction::kfmul_bf16},
+    {"fdiv_bf16",Instruction::kfdiv_bf16},
+
+    // end of BFloat16 instructions
+
+    // newly added SIMDF_xxx32 instructions
+    {"SIMDF_add32",Instruction::kSIMDF_add32},
+    {"SIMDF_sub32",Instruction::kSIMDF_sub32},
+    {"SIMDF_mul32",Instruction::kSIMDF_mul32},
+    {"SIMDF_div32",Instruction::kSIMDF_div32},
+    {"SIMDF_rem32",Instruction::kSIMDF_rem32},
+    {"SIMDF_ld32",Instruction::kSIMDF_ld32},
+    // end of SIMDF_xxx32 instructions
+
     {"fcvt.w.s", Instruction::kfcvt_w_s},
     {"fcvt.wu.s", Instruction::kfcvt_wu_s},
     {"fcvt.l.s", Instruction::kfcvt_l_s},
@@ -201,7 +214,8 @@ static const std::unordered_set<std::string> valid_instructions = {
     "lui", "auipc",
     "jal", "jalr",
     "ecall","SIMD_add32","SIMD_sub32","SIMD_mul32","SIMD_load32","SIMD_div32","SIMD_rem32",
-    "fadd_bf16","fsub_bf16","fmul_bf16","fdiv_bf16","SIMD_add16","SIMD_sub16", // newly added instructions 
+    "fadd_bf16","fsub_bf16","fmul_bf16","fdiv_bf16","SIMD_add16","SIMD_sub16",
+    "SIMDF_add32","SIMDF_sub32","SIMDF_mul32","SIMDF_div32","SIMDF_rem32","SIMDF_ld32", // newly added instructions 
 
     "csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci",
     
@@ -340,6 +354,8 @@ static const std::unordered_set<std::string> FDExtensionR1TypeInstructions = {
     "fadd.s", "fsub.s", "fmul.s", "fdiv.s",
     "fadd.d", "fsub.d", "fmul.d", "fdiv.d",
     "fadd_bf16", "fsub_bf16", "fdiv_bf16", "fmul_bf16", // new Bfloat16 Instructions
+    "SIMDF_add32","SIMDF_sub32","SIMDF_mul32","SIMDF_div32","SIMDF_rem32","SIMDF_ld32", // new SIMDF_xxx32 instructions
+
 };
 
 static const std::unordered_set<std::string> FDExtensionR2TypeInstructions = {
@@ -547,6 +563,14 @@ std::unordered_map<std::string, FDR1TypeInstructionEncoding> F_D_R1_type_instruc
     {"fsub_bf16", {0b1010011, 0b0000110}}, // O_FPR_C_FPR_C_FPR
     {"fmul_bf16", {0b1010011, 0b0001010}}, // O_FPR_C_FPR_C_FPR
     {"fdiv_bf16", {0b1010011, 0b0001110}}, // O_FPR_C_FPR_C_FPR
+
+    // SIMDF_xxx32
+    {"SIMDF_add32",{0b1010011, 0b0000011}}, // O_FPR_C_FPR_C_FPR
+    {"SIMDF_sub32", {0b1010011, 0b0000111}}, // O_FPR_C_FPR_C_FPR
+    {"SIMDF_mul32", {0b1010011, 0b0001011}}, // O_FPR_C_FPR_C_FPR
+    {"SIMDF_div32", {0b1010011, 0b0001111}}, // O_FPR_C_FPR_C_FPR
+    {"SIMDF_rem32", {0b1010011, 0b0010011}}, // O_FPR_C_FPR_C_FPR
+    {"SIMDF_ld32", {0b1010011, 0b0010111}}, // O_FPR_C_FPR_C_FPR
 };
 
 std::unordered_map<std::string, FDR2TypeInstructionEncoding> F_D_R2_type_instruction_encoding_map = {
@@ -783,6 +807,13 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"fmul_bf16", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
     {"fdiv_bf16", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
 
+    {"SIMDF_add32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
+    {"SIMDF_sub32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
+    {"SIMDF_mul32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
+    {"SIMDF_div32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
+    {"SIMDF_rem32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
+    {"SIMDF_ld32", {SyntaxType::O_FPR_C_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_FPR_C_RM}},
+
     {"fsqrt.s", {SyntaxType::O_FPR_C_FPR, SyntaxType::O_FPR_C_FPR_C_RM}},
 
     {"fsgnj.s", {SyntaxType::O_FPR_C_FPR_C_FPR}},
@@ -1001,6 +1032,32 @@ bool isBFloat16Instruction(const uint32_t &instruction) {
   }
 
   return false;
+}
+
+bool isSIMDF32Instruction(const uint32_t &instruction){
+  uint8_t opcode = (instruction & 0b1111111);
+  uint8_t funct7 = (instruction >> 25) & 0b1111111;
+
+  switch (opcode) {
+    case 0b1010011: { 
+      switch (funct7) {
+        case 0b0000011: // SIMDF_add32
+        case 0b0000111: // SIMDF_sub32
+        case 0b0001011: // SIMDF_mul32
+        case 0b0001111: // SIMDF_div32
+        case 0b0010011: // SIMDF_rem32
+        case 0b0010111: // SIMDF_ld32
+          return true; 
+        default:
+          return false; 
+      }
+    }
+    default:
+      break;
+  }
+
+  return false;
+
 }
 
 bool isDInstruction(const uint32_t &instruction) {

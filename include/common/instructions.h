@@ -208,10 +208,20 @@ enum Instruction {
   //end of SIMD_xxx16
   // klbf16,
   // ksbf16,
+  // adding Bfloat16 instructions
   kfadd_bf16,
   kfsub_bf16,
   kfmul_bf16,
   kfdiv_bf16,
+  // end of Bfloat16 instructions
+  // adding SIMDF_xxx32 instructions
+  kSIMDF_add32,
+  kSIMDF_sub32,
+  kSIMDF_mul32,
+  kSIMDF_div32,
+  kSIMDF_rem32,
+  kSIMDF_ld32,
+  // end of SIMDF_xxx32 instructions
   INVALID,
 
   COUNT // sentinel for length
@@ -392,6 +402,17 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
 
 
   // end of the new istrcutions
+
+  // newly added R type instructions for SIMDF_xxx32 
+
+  InstructionEncoding(Instruction::kSIMDF_add32, 0b1010011, -1, -1, -1, -1, 0b0000011),// kSIMDF_add32
+  InstructionEncoding(Instruction::kSIMDF_sub32, 0b1010011, -1, -1, -1, -1, 0b0000111),// kSIMDF_sub32
+  InstructionEncoding(Instruction::kSIMDF_mul32, 0b1010011, -1, -1, -1, -1, 0b0001011),// kSIMDF_mul32
+  InstructionEncoding(Instruction::kSIMDF_div32, 0b1010011, -1, -1, -1, -1, 0b0001111),// kSIMDF_div32
+  InstructionEncoding(Instruction::kSIMDF_rem32, 0b1010011, -1, -1, -1, -1, 0b0010011),// kSIMDF_rem32
+  InstructionEncoding(Instruction::kSIMDF_ld32,  0b1010011, -1, -1, -1, -1, 0b0010111),// kSIMDF_ld32
+
+  // end of instructions
   
 
   InstructionEncoding(Instruction::kfsqrt_s,    0b1010011, -1, -1, 0b00000, -1, 0b0101100), // kfsqrt_s
@@ -712,6 +733,7 @@ bool isValidFDSTypeInstruction(const std::string &instruction);
 bool isFInstruction(const uint32_t &instruction);
 bool isBFloat16Instruction(const uint32_t &instruction);
 bool isDInstruction(const uint32_t &instruction);
+bool isSIMDF32Instruction(const uint32_t &instruction);
 
 std::string getExpectedSyntaxes(const std::string &opcode);
 
