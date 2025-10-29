@@ -228,7 +228,7 @@ static const std::unordered_set<std::string> valid_instructions = {
     "ecall","SIMD_add32","SIMD_sub32","SIMD_mul32","SIMD_load32","SIMD_div32","SIMD_rem32",
     "fadd_bf16","fsub_bf16","fmul_bf16","fdiv_bf16","vdotp_bf16","SIMD_add16","SIMD_sub16",
     "SIMDF_add32","SIMDF_sub32","SIMDF_mul32","SIMDF_div32","SIMDF_rem32","SIMDF_ld32", // newly added instructions 
-    "fadd_bf16","fsub_bf16","fmul_bf16","fdiv_bf16","SIMD_add16","SIMD_sub16","SIMD_mul16","SIMD_div16","SIMD_rem16","SIMD_load16_upper","SIMD_load16_lower", // newly added instructions 
+    "fadd_bf16","fsub_bf16","fmul_bf16","fdiv_bf16","vdotp_bf16","SIMD_add16","SIMD_sub16","SIMD_mul16","SIMD_div16","SIMD_rem16","SIMD_load16_upper","SIMD_load16_lower", // newly added instructions 
 
     "csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci",
     
