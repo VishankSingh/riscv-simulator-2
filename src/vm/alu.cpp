@@ -164,6 +164,96 @@ static std::string decode_fclass(uint16_t res) {
                           (static_cast<uint64_t>(diff3) << 48);
         return {result, false};
     }
+    case AluOp::kSIMD_mul16: {
+    int64_t num_a = static_cast<int64_t>(a);
+    int64_t num_b = static_cast<int64_t>(b);
+
+    int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);
+    int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+    int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+    int16_t a3 = static_cast<int16_t>(num_a >> 48);
+    int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+    int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+    int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+    int16_t b3 = static_cast<int16_t>(num_b >> 48);
+
+    int16_t prod0 = a0 * b0;
+    int16_t prod1 = a1 * b1;
+    int16_t prod2 = a2 * b2;
+    int16_t prod3 = a3 * b3;
+
+    uint64_t result = (static_cast<uint64_t>(prod0) & 0xFFFF) |
+                      ((static_cast<uint64_t>(prod1) & 0xFFFF) << 16) |
+                      ((static_cast<uint64_t>(prod2) & 0xFFFF) << 32) |
+                      (static_cast<uint64_t>(prod3) << 48);
+    return {result, false};
+    }
+    case AluOp::kSIMD_div16: {
+    int64_t num_a = static_cast<int64_t>(a);
+    int64_t num_b = static_cast<int64_t>(b);
+
+    int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);
+    int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+    int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+    int16_t a3 = static_cast<int16_t>(num_a >> 48);
+    int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+    int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+    int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+    int16_t b3 = static_cast<int16_t>(num_b >> 48);
+
+    int16_t div0 = (b0 == 0) ? 0 : (a0 / b0);  // Avoid div-by-zero
+    int16_t div1 = (b1 == 0) ? 0 : (a1 / b1);
+    int16_t div2 = (b2 == 0) ? 0 : (a2 / b2);
+    int16_t div3 = (b3 == 0) ? 0 : (a3 / b3);
+
+    uint64_t result = (static_cast<uint64_t>(div0) & 0xFFFF) |
+                      ((static_cast<uint64_t>(div1) & 0xFFFF) << 16) |
+                      ((static_cast<uint64_t>(div2) & 0xFFFF) << 32) |
+                      (static_cast<uint64_t>(div3) << 48);
+    return {result, false};
+    }
+    case AluOp::kSIMD_rem16: {
+    int64_t num_a = static_cast<int64_t>(a);
+    int64_t num_b = static_cast<int64_t>(b);
+
+    int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);
+    int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+    int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+    int16_t a3 = static_cast<int16_t>(num_a >> 48);
+    int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+    int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+    int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+    int16_t b3 = static_cast<int16_t>(num_b >> 48);
+
+    int16_t rem0 = (b0 == 0) ? 0 : (a0 % b0);
+    int16_t rem1 = (b1 == 0) ? 0 : (a1 % b1);
+    int16_t rem2 = (b2 == 0) ? 0 : (a2 % b2);
+    int16_t rem3 = (b3 == 0) ? 0 : (a3 % b3);
+
+    uint64_t result = (static_cast<uint64_t>(rem0) & 0xFFFF) |
+                      ((static_cast<uint64_t>(rem1) & 0xFFFF) << 16) |
+                      ((static_cast<uint64_t>(rem2) & 0xFFFF) << 32) |
+                      (static_cast<uint64_t>(rem3) << 48);
+    return {result, false};
+    }
+    case AluOp::kSIMD_load16_upper: {
+    int64_t num_b = static_cast<int64_t>(b);  // rs2
+
+    // Take upper 32 bits of rs2 (two 16-bit values), shift to top
+    uint32_t upper_32 = static_cast<uint32_t>(num_b >> 32);
+    uint64_t result = (static_cast<uint64_t>(upper_32) << 32);  // Lower 32 bits = 0
+
+    return {result, false};
+    }
+    case AluOp::kSIMD_load16_lower: {
+    int64_t num_b = static_cast<int64_t>(b);  // rs2
+
+    // Take lower 32 bits of rs2
+    uint32_t lower_32 = static_cast<uint32_t>(num_b & 0xFFFFFFFFULL);
+    uint64_t result = static_cast<uint64_t>(lower_32);  // Upper 32 bits = 0
+
+    return {result, false};
+    }
     case AluOp::kSIMD_mul32: {
       int64_t num_a = static_cast<int64_t>(a);
       int64_t num_b = static_cast<int64_t>(b);
