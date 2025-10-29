@@ -196,7 +196,38 @@ enum Instruction {
   kfcvt_d_l, 
   kfcvt_d_lu, 
   kfmv_d_x,
-
+  kSIMD_add32, 
+  kSIMD_sub32, 
+  kSIMD_mul32, 
+  kSIMD_load32,
+  kSIMD_rem32, 
+  kSIMD_div32,
+  // adding SIMD_xxx16
+  kSIMD_add16,
+  kSIMD_sub16,
+  kSIMD_mul16,
+  kSIMD_load16_upper,
+  kSIMD_load16_lower,
+  kSIMD_div16,
+  kSIMD_rem16,
+  //end of SIMD_xxx16
+  // klbf16,
+  // ksbf16,
+  // adding Bfloat16 instructions
+  kfadd_bf16,
+  kfsub_bf16,
+  kfmul_bf16,
+  kfdiv_bf16,
+  kvdotp_bf16,
+  // end of Bfloat16 instructions
+  // adding SIMDF_xxx32 instructions
+  kSIMDF_add32,
+  kSIMDF_sub32,
+  kSIMDF_mul32,
+  kSIMDF_div32,
+  kSIMDF_rem32,
+  kSIMDF_ld32,
+  // end of SIMDF_xxx32 instructions
   INVALID,
 
   COUNT // sentinel for length
@@ -239,8 +270,27 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::ksrl,        0b0110011, -1, 0b101, -1, -1, 0b0000000), // ksrl
   InstructionEncoding(Instruction::ksra,        0b0110011, -1, 0b101, -1, -1, 0b0100000), // ksra
   InstructionEncoding(Instruction::kor,         0b0110011, -1, 0b110, -1, -1, 0b0000000), // kor
-  InstructionEncoding(Instruction::kand,        0b0110011, -1, 0b111, -1, -1, 0b0000000), // kand
-
+  InstructionEncoding(Instruction::kand,        0b0110011, -1, 0b111, -1, -1, 0b0000000), 
+  
+// similarly newly added simple R type instructions 
+  InstructionEncoding(Instruction::kSIMD_add32, 0b0110011, -1, 0b000, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_sub32, 0b0110011, -1, 0b001, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_mul32, 0b0110011, -1, 0b011, -1 ,-1, 0b0001011), 
+  InstructionEncoding(Instruction::kSIMD_load32, 0b0110011, -1, 0b111, -1 ,-1, 0b0001011), 
+  
+  InstructionEncoding(Instruction::kSIMD_div32, 0b0110011, -1, 0b100, -1 ,-1, 0b0001011),
+  InstructionEncoding(Instruction::kSIMD_rem32, 0b0110011, -1, 0b101, -1 ,-1, 0b0001011),
+  
+  
+  InstructionEncoding(Instruction::kSIMD_add16, 0b0110011, -1, 0b010, -1 ,-1, 0b0001011),
+  InstructionEncoding(Instruction::kSIMD_sub16, 0b0110011, -1, 0b110, -1 ,-1, 0b0001011),
+  
+  InstructionEncoding(Instruction::kSIMD_mul16, 0b0110011, -1, 0b000, -1 ,-1, 0b0001111),
+  InstructionEncoding(Instruction::kSIMD_load16_upper, 0b0110011, -1, 0b001, -1 ,-1, 0b0001111),
+  InstructionEncoding(Instruction::kSIMD_load16_lower, 0b0110011, -1, 0b010, -1 ,-1, 0b0001111),
+  InstructionEncoding(Instruction::kSIMD_div16, 0b0110011, -1, 0b011, -1 ,-1, 0b0001111),
+  InstructionEncoding(Instruction::kSIMD_rem16, 0b0110011, -1, 0b100, -1 ,-1, 0b0001111),
+// end of the new istrcutions
 
   InstructionEncoding(Instruction::kmul,        0b0110011, -1, 0b000, -1, -1, 0b0000001), // kmul
   InstructionEncoding(Instruction::kmulh,       0b0110011, -1, 0b001, -1, -1, 0b0000001), // kmulh
@@ -356,6 +406,28 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kfsub_d,     0b1010011, -1, -1, -1, -1, 0b0000101), // kfsub_d
   InstructionEncoding(Instruction::kfmul_d,     0b1010011, -1, -1, -1, -1, 0b0001001), // kfmul_d
   InstructionEncoding(Instruction::kfdiv_d,     0b1010011, -1, -1, -1, -1, 0b0001101), // kfdiv_d
+
+  // newly added simple R type instructions for Bfloat16 
+
+  InstructionEncoding(Instruction::kfadd_bf16, 0b1010011, -1, -1, -1, -1, 0b0000010), // kfadd_bf16
+  InstructionEncoding(Instruction::kfsub_bf16, 0b1010011, -1, -1, -1, -1, 0b0000110), // kfsub_bf16
+  InstructionEncoding(Instruction::kfmul_bf16, 0b1010011, -1, -1, -1, -1, 0b0001010), // kfmul_bf16
+  InstructionEncoding(Instruction::kfdiv_bf16, 0b1010011, -1, -1, -1, -1, 0b0001110), // kfdiv_bf16
+  InstructionEncoding(Instruction::kvdotp_bf16, 0b1010011, -1, -1, -1, -1, 0b0010010), // kvdotp_bf16
+
+
+  // end of the new istrcutions
+
+  // newly added R type instructions for SIMDF_xxx32 
+
+  InstructionEncoding(Instruction::kSIMDF_add32, 0b1010011, -1, -1, -1, -1, 0b0000011),// kSIMDF_add32
+  InstructionEncoding(Instruction::kSIMDF_sub32, 0b1010011, -1, -1, -1, -1, 0b0000111),// kSIMDF_sub32
+  InstructionEncoding(Instruction::kSIMDF_mul32, 0b1010011, -1, -1, -1, -1, 0b0001011),// kSIMDF_mul32
+  InstructionEncoding(Instruction::kSIMDF_div32, 0b1010011, -1, -1, -1, -1, 0b0001111),// kSIMDF_div32
+  InstructionEncoding(Instruction::kSIMDF_rem32, 0b1010011, -1, -1, -1, -1, 0b0010011),// kSIMDF_rem32
+  InstructionEncoding(Instruction::kSIMDF_ld32,  0b1010011, -1, -1, -1, -1, 0b0010111),// kSIMDF_ld32
+
+  // end of instructions
   
 
   InstructionEncoding(Instruction::kfsqrt_s,    0b1010011, -1, -1, 0b00000, -1, 0b0101100), // kfsqrt_s
@@ -674,7 +746,9 @@ bool isValidFDITypeInstruction(const std::string &instruction);
 bool isValidFDSTypeInstruction(const std::string &instruction);
 
 bool isFInstruction(const uint32_t &instruction);
+bool isBFloat16Instruction(const uint32_t &instruction);
 bool isDInstruction(const uint32_t &instruction);
+bool isSIMDF32Instruction(const uint32_t &instruction);
 
 std::string getExpectedSyntaxes(const std::string &opcode);
 

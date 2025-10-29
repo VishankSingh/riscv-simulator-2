@@ -5,12 +5,14 @@
  */
 
 #include "vm/alu.h"
+#include "fp_utils/bfloat16.h"
 #include <cfenv>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <limits>
 
 namespace alu {
 
@@ -90,6 +92,216 @@ static std::string decode_fclass(uint16_t res) {
 
       return {static_cast<uint64_t>(high_result), false};
     }
+    case AluOp::kSIMD_add32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t sum_upper = upper_a + upper_b;
+      int32_t sum_lower = lower_a + lower_b;
+      uint64_t result = static_cast<uint64_t>(sum_lower) | (static_cast<uint64_t>(sum_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_sub32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t diff_upper = upper_a - upper_b;
+      int32_t diff_lower = lower_a - lower_b;
+      uint64_t result = static_cast<uint64_t>(diff_lower) | (static_cast<uint64_t>(diff_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_add16: {
+        int64_t num_a = static_cast<int64_t>(a);
+        int64_t num_b = static_cast<int64_t>(b);
+        // Extract four 16-bit parts from each 64-bit input
+        int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);         // Lowest 16 bits
+        int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+        int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+        int16_t a3 = static_cast<int16_t>(num_a >> 48);            // Highest 16 bits
+        int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+        int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+        int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+        int16_t b3 = static_cast<int16_t>(num_b >> 48);
+        // Perform 16-bit additions
+        int16_t sum0 = a0 + b0;
+        int16_t sum1 = a1 + b1;
+        int16_t sum2 = a2 + b2;
+        int16_t sum3 = a3 + b3;
+        // Combine results into a 64-bit value
+        uint64_t result = (static_cast<uint64_t>(sum0) & 0xFFFF) |
+                          ((static_cast<uint64_t>(sum1) & 0xFFFF) << 16) |
+                          ((static_cast<uint64_t>(sum2) & 0xFFFF) << 32) |
+                          (static_cast<uint64_t>(sum3) << 48);
+        return {result, false};
+    }
+    case AluOp::kSIMD_sub16: {
+        int64_t num_a = static_cast<int64_t>(a);
+        int64_t num_b = static_cast<int64_t>(b);
+        // Extract four 16-bit parts from each 64-bit input
+        int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);         // Lowest 16 bits
+        int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+        int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+        int16_t a3 = static_cast<int16_t>(num_a >> 48);            // Highest 16 bits
+        int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+        int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+        int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+        int16_t b3 = static_cast<int16_t>(num_b >> 48);
+        // Perform 16-bit subtractions
+        int16_t diff0 = a0 - b0;
+        int16_t diff1 = a1 - b1;
+        int16_t diff2 = a2 - b2;
+        int16_t diff3 = a3 - b3;
+        // Combine results into a 64-bit value
+        uint64_t result = (static_cast<uint64_t>(diff0) & 0xFFFF) |
+                          ((static_cast<uint64_t>(diff1) & 0xFFFF) << 16) |
+                          ((static_cast<uint64_t>(diff2) & 0xFFFF) << 32) |
+                          (static_cast<uint64_t>(diff3) << 48);
+        return {result, false};
+    }
+    case AluOp::kSIMD_mul16: {
+    int64_t num_a = static_cast<int64_t>(a);
+    int64_t num_b = static_cast<int64_t>(b);
+
+    int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);
+    int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+    int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+    int16_t a3 = static_cast<int16_t>(num_a >> 48);
+    int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+    int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+    int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+    int16_t b3 = static_cast<int16_t>(num_b >> 48);
+
+    int16_t prod0 = a0 * b0;
+    int16_t prod1 = a1 * b1;
+    int16_t prod2 = a2 * b2;
+    int16_t prod3 = a3 * b3;
+
+    uint64_t result = (static_cast<uint64_t>(prod0) & 0xFFFF) |
+                      ((static_cast<uint64_t>(prod1) & 0xFFFF) << 16) |
+                      ((static_cast<uint64_t>(prod2) & 0xFFFF) << 32) |
+                      (static_cast<uint64_t>(prod3) << 48);
+    return {result, false};
+    }
+    case AluOp::kSIMD_div16: {
+    int64_t num_a = static_cast<int64_t>(a);
+    int64_t num_b = static_cast<int64_t>(b);
+
+    int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);
+    int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+    int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+    int16_t a3 = static_cast<int16_t>(num_a >> 48);
+    int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+    int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+    int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+    int16_t b3 = static_cast<int16_t>(num_b >> 48);
+
+    int16_t div0 = (b0 == 0) ? 0 : (a0 / b0);  // Avoid div-by-zero
+    int16_t div1 = (b1 == 0) ? 0 : (a1 / b1);
+    int16_t div2 = (b2 == 0) ? 0 : (a2 / b2);
+    int16_t div3 = (b3 == 0) ? 0 : (a3 / b3);
+
+    uint64_t result = (static_cast<uint64_t>(div0) & 0xFFFF) |
+                      ((static_cast<uint64_t>(div1) & 0xFFFF) << 16) |
+                      ((static_cast<uint64_t>(div2) & 0xFFFF) << 32) |
+                      (static_cast<uint64_t>(div3) << 48);
+    return {result, false};
+    }
+    case AluOp::kSIMD_rem16: {
+    int64_t num_a = static_cast<int64_t>(a);
+    int64_t num_b = static_cast<int64_t>(b);
+
+    int16_t a0 = static_cast<int16_t>(num_a & 0xFFFF);
+    int16_t a1 = static_cast<int16_t>((num_a >> 16) & 0xFFFF);
+    int16_t a2 = static_cast<int16_t>((num_a >> 32) & 0xFFFF);
+    int16_t a3 = static_cast<int16_t>(num_a >> 48);
+    int16_t b0 = static_cast<int16_t>(num_b & 0xFFFF);
+    int16_t b1 = static_cast<int16_t>((num_b >> 16) & 0xFFFF);
+    int16_t b2 = static_cast<int16_t>((num_b >> 32) & 0xFFFF);
+    int16_t b3 = static_cast<int16_t>(num_b >> 48);
+
+    int16_t rem0 = (b0 == 0) ? 0 : (a0 % b0);
+    int16_t rem1 = (b1 == 0) ? 0 : (a1 % b1);
+    int16_t rem2 = (b2 == 0) ? 0 : (a2 % b2);
+    int16_t rem3 = (b3 == 0) ? 0 : (a3 % b3);
+
+    uint64_t result = (static_cast<uint64_t>(rem0) & 0xFFFF) |
+                      ((static_cast<uint64_t>(rem1) & 0xFFFF) << 16) |
+                      ((static_cast<uint64_t>(rem2) & 0xFFFF) << 32) |
+                      (static_cast<uint64_t>(rem3) << 48);
+    return {result, false};
+    }
+    case AluOp::kSIMD_load16_upper: {
+    int64_t num_b = static_cast<int64_t>(b);  // rs2
+
+    // Take upper 32 bits of rs2 (two 16-bit values), shift to top
+    uint32_t upper_32 = static_cast<uint32_t>(num_b >> 32);
+    uint64_t result = (static_cast<uint64_t>(upper_32) << 32);  // Lower 32 bits = 0
+
+    return {result, false};
+    }
+    case AluOp::kSIMD_load16_lower: {
+    int64_t num_b = static_cast<int64_t>(b);  // rs2
+
+    // Take lower 32 bits of rs2
+    uint32_t lower_32 = static_cast<uint32_t>(num_b & 0xFFFFFFFFULL);
+    uint64_t result = static_cast<uint64_t>(lower_32);  // Upper 32 bits = 0
+
+    return {result, false};
+    }
+    case AluOp::kSIMD_mul32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t prod_upper = upper_a * upper_b;
+      int32_t prod_lower = lower_a * lower_b;
+      uint64_t result = static_cast<uint64_t>(prod_lower) | (static_cast<uint64_t>(prod_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_div32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t div_upper = (upper_b != 0) ? upper_a / upper_b : 0; // Avoid division by zero
+      int32_t div_lower = (lower_b != 0) ? lower_a / lower_b : 0; // Avoid division by zero
+      uint64_t result = static_cast<uint64_t>(div_lower) | (static_cast<uint64_t>(div_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_rem32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int32_t upper_a = static_cast<int32_t>(num_a >> 32);
+      int32_t lower_a = static_cast<int32_t>(num_a & 0xFFFFFFFF);
+      int32_t upper_b = static_cast<int32_t>(num_b >> 32);
+      int32_t lower_b = static_cast<int32_t>(num_b & 0xFFFFFFFF);
+      int32_t rem_upper = (upper_b != 0) ? upper_a % upper_b : 0; // Avoid division by zero
+      int32_t rem_lower = (lower_b != 0) ? lower_a % lower_b : 0; // Avoid division by zero
+      uint64_t result = static_cast<uint64_t>(rem_lower) | (static_cast<uint64_t>(rem_upper) << 32);
+      return {result, false};
+    }
+    case AluOp::kSIMD_load32: {
+      int64_t num_a = static_cast<int64_t>(a);
+      int64_t num_b = static_cast<int64_t>(b);
+      int64_t upper = num_a << 32; // Upper 32 bits from a
+      int32_t lower = static_cast<int32_t>(num_b); // Lower 32 bits from b
+      uint64_t result = static_cast<uint64_t>(lower) | static_cast<uint64_t>(upper);
+      return {result, false};
+    }
+    
+    
+    
+    
     case AluOp::kMulhsu: {
       auto sa = static_cast<int64_t>(a);
       auto sb = static_cast<uint64_t>(b);
@@ -197,6 +409,7 @@ static std::string decode_fclass(uint16_t res) {
     case AluOp::kXor: {
       return {static_cast<uint64_t>(a ^ b), false};
     }
+    
     case AluOp::kSll: {
       uint64_t result = a << (b & 63);
       return {result, false};
@@ -825,6 +1038,281 @@ static std::string decode_fclass(uint16_t res) {
   std::memcpy(&result_bits, &result, sizeof(result));
   return {result_bits, fcsr};
 }
+
+[[nodiscard]] std::pair<uint64_t, uint8_t> Alu::bf16execute(AluOp op,
+                                                            uint64_t ina,
+                                                            uint64_t inb,
+                                                            uint64_t inc,
+                                                            uint8_t rm){
+  
+  using namespace std;
+  
+  uint64_t result_accumulator = 0;
+  uint8_t fcsr = 0;
+
+
+  int original_rm = fegetround();
+  switch(rm){
+    case 0b000: fesetround(FE_TONEAREST); break;
+    case 0b001: fesetround(FE_TOWARDZERO); break;
+    case 0b010: fesetround(FE_DOWNWARD); break;
+    case 0b011: fesetround(FE_UPWARD); break;
+    default: break;
+  }
+
+  feclearexcept(FE_ALL_EXCEPT);
+
+  switch(op){
+
+    case AluOp::FADD_BF16:
+    case AluOp::FSUB_BF16:
+    case AluOp::FMUL_BF16:
+    case AluOp::FDIV_BF16:{
+
+      const float BF16_MAX = 3.38953139e38f;
+      const float BF16_MIN = -BF16_MAX;
+
+      for(int i=0; i<4; i++){
+
+        uint16_t a_bits = static_cast<uint16_t>((ina >> (i*16)) & 0xFFFF);
+        uint16_t b_bits = static_cast<uint16_t>((inb >> (i*16)) & 0xFFFF);
+
+        float a = bfloat16_to_float(a_bits);
+        float b = bfloat16_to_float(b_bits);
+        float result_f = 0.0f;
+
+        switch(op){
+          case AluOp::FADD_BF16:
+            result_f = a+b;
+            break;
+          case AluOp::FSUB_BF16:
+            result_f = a-b;
+            break;
+          case AluOp::FMUL_BF16:
+            result_f = a*b;
+            break;
+          case AluOp::FDIV_BF16:
+            if(b==0.0f){
+              result_f = numeric_limits<float>::quiet_NaN();
+            }
+            else{
+              result_f = a/b;
+            }
+            break;
+          default:
+            result_f = numeric_limits<float>::quiet_NaN();
+            break;
+        }
+
+        if(!isnan(result_f)){
+          if(result_f>BF16_MAX){
+            result_f = BF16_MAX;
+          }
+          else if(result_f<BF16_MIN){
+            result_f = BF16_MIN;
+          }
+        }
+
+        uint16_t result_bits = float_to_bfloat16(result_f);
+
+        result_accumulator |= (static_cast<uint64_t>(result_bits) << (i*16));
+
+      }
+      break;
+    }
+    case AluOp::VDOTP_BF16:{
+      float a[4],b[4];
+      for(int i=0;i<4;i++){
+        a[i]=bfloat16_to_float(static_cast<uint16_t>((ina>>(i*16))&0xFFFF));
+        b[i]=bfloat16_to_float(static_cast<uint16_t>((inb>>(i*16))&0xFFFF));
+      }
+
+      uint32_t acc_bits = static_cast<uint32_t>(inc&0xFFFFFFFF);
+      float acc_in;
+      memcpy(&acc_in, &acc_bits, sizeof(float));
+      float prod0 = a[0]*b[0];
+      float prod1 = a[1]*b[1];
+      float prod2 = a[2]*b[2];
+      float prod3 = a[3]*b[3];
+
+      float sum = prod0+prod1+prod2+prod3;
+
+      float result_f = acc_in + sum;
+
+      uint32_t result_bits;
+      memcpy(&result_bits, &result_f, sizeof(float));
+      result_accumulator = static_cast<uint64_t>(result_bits);
+
+      break;
+    }
+    default:
+      break;
+  }
+
+
+  int raised = fetestexcept(FE_ALL_EXCEPT);
+  if (raised & FE_INVALID) fcsr |= FCSR_INVALID_OP;
+  if (raised & FE_DIVBYZERO) fcsr |= FCSR_DIV_BY_ZERO;
+  if (raised & FE_OVERFLOW) fcsr |= FCSR_OVERFLOW;
+  if (raised & FE_UNDERFLOW) fcsr |= FCSR_UNDERFLOW;
+  if (raised & FE_INEXACT) fcsr |= FCSR_INEXACT;
+    
+
+  fesetround(original_rm);
+
+  return {result_accumulator, fcsr};
+}
+
+[[nodiscard]] std::pair<uint64_t, uint8_t> Alu::simdf32execute(AluOp op,
+                                                               uint64_t ina,
+                                                               uint64_t inb,
+                                                               uint64_t inc,
+                                                               uint8_t rm){
+
+  using namespace std;
+
+  uint32_t ina_lo_bits = static_cast<uint32_t>(ina & 0xFFFFFFFF);
+  uint32_t ina_hi_bits = static_cast<uint32_t>(ina >> 32);
+  uint32_t inb_lo_bits = static_cast<uint32_t>(inb & 0xFFFFFFFF);
+  uint32_t inb_hi_bits = static_cast<uint32_t>(inb >> 32);
+
+  float a_lo,a_hi,b_lo,b_hi;
+  memcpy(&a_lo, &ina_lo_bits, sizeof(float));
+  memcpy(&a_hi, &ina_hi_bits, sizeof(float));
+  memcpy(&b_lo, &inb_lo_bits, sizeof(float));
+  memcpy(&b_hi, &inb_hi_bits, sizeof(float));
+
+  float result_lo = 0.0f;
+  float result_hi = 0.0f;
+  uint64_t result_accumulator = 0;
+
+  uint8_t fcsr = 0;
+  int original_rm = fegetround();
+  switch(rm){
+    case 0b000: fesetround(FE_TONEAREST); break;
+    case 0b001: fesetround(FE_TOWARDZERO); break;
+    case 0b010: fesetround(FE_DOWNWARD); break;
+    case 0b011: fesetround(FE_UPWARD); break;
+    default: break;
+  }
+  feclearexcept(FE_ALL_EXCEPT);
+
+  const float F32_MAX = std::numeric_limits<float>::max();
+  const float F32_MIN = -F32_MAX;
+
+  switch(op){
+    case AluOp::SIMDF_ADD32:{
+      result_lo = a_lo + b_lo;
+      result_hi = a_hi + b_hi;
+      break;
+    }
+    case AluOp::SIMDF_SUB32:{
+      result_lo = a_lo - b_lo;
+      result_hi = a_hi - b_hi;
+      break;
+    }
+    case AluOp::SIMDF_MUL32:{
+      result_lo = a_lo * b_lo;
+      result_hi = a_hi * b_hi;
+      break;
+    }
+    case AluOp::SIMDF_DIV32:{
+      
+      if(b_lo==0.0f){
+        result_lo = numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_DIV_BY_ZERO;
+      }
+      else{
+        result_lo = a_lo/b_lo;
+      }
+      if(b_hi==0.0f){
+        result_hi = std::numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_DIV_BY_ZERO;
+      }
+      else{
+        result_hi = a_hi/b_hi;
+      }
+      break;
+    }
+    case AluOp::SIMDF_REM32:{
+      if(b_lo==0.0f){
+        result_lo = std::numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_INVALID_OP;
+      }
+      else{
+        result_lo = std::fmod(a_lo, b_lo);
+      }
+      if(b_hi==0.0f){
+        result_hi = std::numeric_limits<float>::quiet_NaN();
+        fcsr |= FCSR_INVALID_OP;
+      }
+      else{
+        result_hi = fmod(a_hi,b_hi);
+      }
+      break;
+
+    }
+    case AluOp::SIMDF_LD32:{
+      uint32_t lo_from_rs1 = static_cast<uint32_t>(ina & 0xFFFFFFFF);
+      uint32_t lo_from_rs2 = static_cast<uint32_t>(inb & 0xFFFFFFFF);
+      result_accumulator = (static_cast<uint64_t>(lo_from_rs1) << 32) | lo_from_rs2;
+      
+      fesetround(original_rm);
+      return {result_accumulator, fcsr};
+    }
+    default:
+    break;
+  }
+
+  bool lo_was_inf = std::isinf(result_lo);
+  bool hi_was_inf = std::isinf(result_hi);
+
+  auto clamp_lane = [&](float &v){
+    if(isnan(v)){
+      return;
+    }
+    if(isinf(v)){
+      v = signbit(v) ? F32_MIN : F32_MAX;
+      return;
+    }
+
+    if(v>F32_MAX){
+      v = F32_MAX;
+    }
+    else if(v<F32_MIN){
+      v = F32_MIN;
+
+    }
+  };
+
+  clamp_lane(result_lo);
+  clamp_lane(result_hi);
+
+  int raised = fetestexcept(FE_ALL_EXCEPT);
+  if (raised & FE_INVALID) fcsr |= FCSR_INVALID_OP;
+  if (raised & FE_DIVBYZERO) fcsr |= FCSR_DIV_BY_ZERO;
+  if (raised & FE_OVERFLOW) fcsr |= FCSR_OVERFLOW;
+  if (raised & FE_UNDERFLOW) fcsr |= FCSR_UNDERFLOW;
+  if (raised & FE_INEXACT) fcsr |= FCSR_INEXACT;
+
+  if(lo_was_inf||hi_was_inf){
+    fcsr|= FCSR_OVERFLOW;
+  }
+
+  fesetround(original_rm);
+
+  uint32_t result_lo_bits;
+  uint32_t result_hi_bits;
+
+  memcpy(&result_lo_bits,&result_lo,sizeof(float));
+  memcpy(&result_hi_bits,&result_hi,sizeof(float));
+
+
+  result_accumulator = (static_cast<uint64_t>(result_hi_bits) <<32)|result_lo_bits;
+
+
+  return {result_accumulator,fcsr};                                                               
+                                                               }
 
 void Alu::setFlags(bool carry, bool zero, bool negative, bool overflow) {
   carry_ = carry;

@@ -48,6 +48,23 @@ enum class AluOp {
     kAnd, ///< Bitwise kAnd operation.
     kOr, ///< Bitwise kOr operation.
     kXor, ///< Bitwise kXor operation.
+    
+    // new SIMD_xxx32
+    kSIMD_add32, 
+    kSIMD_sub32,
+    kSIMD_mul32,
+    kSIMD_load32,
+    kSIMD_div32,
+    kSIMD_rem32,
+    
+    kSIMD_add16,
+    kSIMD_sub16,
+    kSIMD_mul16,
+    kSIMD_load16_upper,
+    kSIMD_load16_lower,
+    kSIMD_div16,
+    kSIMD_rem16,
+    // end of new instructions added
     kSll, ///< Shift left logical operation.
     kSllw, ///< Shift left logical word operation.
     kSrl, ///< Shift right logical operation.
@@ -126,6 +143,25 @@ enum class AluOp {
 
     FMV_D_X, ///< Floating point move to integer double operation.
     FMV_X_D, ///< Floating point move from integer double operation.
+
+    // newly added instructions of Bfloat16
+    FADD_BF16, ///< Floating point addition Bfloat16
+    FSUB_BF16, ///< Floating point subtraction Bfloat16
+    FMUL_BF16, ///< Floating point multiplication Bfloat16
+    FDIV_BF16, ///< Floating point division Bfloat16
+    VDOTP_BF16, ///< Vector Bfloat16 dot product
+
+    // end of BFloat16 instructions
+
+    // newly added SIMDF_xxx32 instructions
+    SIMDF_ADD32, ///< SIMD addition of float32 
+    SIMDF_SUB32, ///< SIMD subtraction of float32 
+    SIMDF_MUL32, ///< SIMD multiplication of float32 
+    SIMDF_DIV32, ///< SIMD division of float32 
+    SIMDF_REM32, ///< SIMD remainder of float32 
+    SIMDF_LD32, ///< SIMD load of two registers of float32 to float64 
+
+    // end of new instructions
 };
 
 inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
@@ -141,6 +177,25 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::kAnd: os << "kAnd"; break;
         case AluOp::kOr: os << "kOr"; break;
         case AluOp::kXor: os << "kXor"; break;
+        
+        //  newly added SIMD_xxx32
+        case AluOp::kSIMD_add32: os << "kSIMD_add32";break;
+        case AluOp::kSIMD_sub32: os << "kSIMD_sub32";break;
+        case AluOp::kSIMD_mul32: os << "kSIMD_mul32";break;
+        case AluOp::kSIMD_load32: os << "kSIMD_load32";break;
+        case AluOp::kSIMD_div32: os << "kSIMD_div32";break;
+        case AluOp::kSIMD_rem32: os << "kSIMD_rem32";break;
+        
+        
+        case AluOp::kSIMD_add16: os << "kSIMD_add16";break;
+        case AluOp::kSIMD_sub16: os << "kSIMD_sub16";break;
+        case AluOp::kSIMD_mul16: os << "kSIMD_mul16";break;
+        case AluOp::kSIMD_div16: os << "kSIMD_div16";break;
+        case AluOp::kSIMD_rem16: os << "kSIMD_rem16";break;
+        case AluOp::kSIMD_load16_upper: os << "kSIMD_load16_upper";break;
+        case AluOp::kSIMD_load16_lower: os << "kSIMD_load16_lower";break;
+        // end of new SIMD_xxx32
+        
         case AluOp::kSll: os << "kSll"; break;
         case AluOp::kSrl: os << "kSrl"; break;
         case AluOp::kSra: os << "kSra"; break;
@@ -196,6 +251,24 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::FSQRT_D: os << "FSQRT_D"; break;
         case AluOp::FSGNJ_D: os << "FSGNJ_D"; break;
 
+        // newly added Bfloat16 instructions
+        case AluOp::FADD_BF16: os << "FADD_BF16";break;
+        case AluOp::FSUB_BF16: os << "FSUB_BF16";break;
+        case AluOp::FDIV_BF16: os << "FDIV_BF16";break;
+        case AluOp::FMUL_BF16: os << "FMUL_BF16";break;
+        case AluOp::VDOTP_BF16: os << "VDOTP_BF16";break;
+        
+        // end of new Bfloat16 instructions
+
+        // newly added SIMDF_xxx32 instructions
+        case AluOp::SIMDF_ADD32: os << "SIMDF_ADD32";break;
+        case AluOp::SIMDF_SUB32: os << "SIMDF_SUB32";break;
+        case AluOp::SIMDF_MUL32: os << "SIMDF_MUL32";break;
+        case AluOp::SIMDF_DIV32: os << "SIMDF_DIV32";break;
+        case AluOp::SIMDF_REM32: os << "SIMDF_REM32";break;
+        case AluOp::SIMDF_LD32: os << "SIMF_LD32";break;
+
+        // end of SIMDF_xxx32 instructions
 
         default: os << "UNKNOWN"; break;
     }
@@ -229,6 +302,10 @@ public:
     [[nodiscard]] static std::pair<uint64_t, uint8_t> fpexecute(AluOp op, uint64_t ina, uint64_t inb, uint64_t inc, uint8_t rm) ;
 
     [[nodiscard]] static std::pair<uint64_t, bool> dfpexecute(AluOp op, uint64_t ina, uint64_t inb, uint64_t inc, uint8_t rm) ;
+
+    [[nodiscard]] static std::pair<uint64_t, uint8_t> bf16execute(AluOp op, uint64_t ina, uint64_t inb, uint64_t inc, uint8_t rm);
+
+    [[nodiscard]] static std::pair<uint64_t, uint8_t> simdf32execute(AluOp op, uint64_t ina, uint64_t inb, uint64_t inc, uint8_t rm);
 
     void setFlags(bool carry, bool zero, bool negative, bool overflow);
 

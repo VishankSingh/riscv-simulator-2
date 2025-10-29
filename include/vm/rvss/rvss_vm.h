@@ -130,6 +130,8 @@ class RVSSVM : public VmBase {
 
   void Execute();
   void ExecuteFloat();
+  void ExecuteBFloat16();
+  void ExecuteSIMDF32();
   void ExecuteDouble();
   void ExecuteCsr();
   void HandleSyscall();
